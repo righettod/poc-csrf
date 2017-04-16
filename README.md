@@ -14,6 +14,12 @@ The POC will focus on stateless approach, i.e. no use of Session for CSRF token 
 
 https://github.com/aramrami/OWASP-CSRFGuard
 
+All classes are fully documented.
+
+The project is developed with Maven under IntelliJ IDEA.
+
+A web page propose to send manual request in parallel of automated request sending.
+
 # Limitations
 
 Currently the POC do not support quick parallel Ajax requests from the same application, I'm working to resolve this issue...
