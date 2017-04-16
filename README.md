@@ -18,12 +18,9 @@ All classes are fully documented.
 
 The project is developed with Maven under IntelliJ IDEA.
 
-A web page propose to send manual request in parallel of automated request sending.
+A web page propose to send manual request in parallel of automated requests sending in order to show all parallel exchanges and CSRF tokens parallel handling.
 
-# Limitations
-
-Currently the POC do not support quick parallel Ajax requests from the same application, I'm working to resolve this issue...
-
+![Demo](demo.gif)
 
 # Note about the SameSite cookie attribute
 

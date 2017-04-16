@@ -24,14 +24,18 @@ import java.util.Arrays;
 /**
  * Filter in charge of validating each incoming HTTP request about Headers and CSRF token.
  * It is called for all requests to backend destination.
+ *
  * We use the approach in which:
- * - The CSRF token is changed after each valid request
- * - The cookie + custom Header name for the CSRF token transmission is fixed
- * <p>
+ * - The CSRF token is changed after each valid HTTP exchange
+ * - The custom Header name for the CSRF token transmission is fixed
+ * - A CSRF token is associated to a backend service URI in order to enable the support for multiple parallel Ajax request from the same application
+ * - The CSRF cookie name is the backend service name prefixed with a fixed prefix
+ *
  * Here for the POC we show the "access denied" reason in the response but in production code only return a generic message !!!
  *
  * @see "https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet"
  * @see "https://wiki.mozilla.org/Security/Origin"
+ * @see "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie"
  * @see "https://chloe.re/2016/04/13/goodbye-csrf-samesite-to-the-rescue/"
  */
 @WebFilter("/backend/*")
@@ -43,7 +47,7 @@ public class CSRFValidationFilter implements Filter {
     public static final String TARGET_ORIGIN_JVM_PARAM_NAME = "target.origin";
 
     /**
-     * Name of the cookie and the custom HTTP header used to transmit the CSRF token
+     * Name of the custom HTTP header used to transmit the CSRF token and also to prefix the CSRF cookie for the expected backend service
      */
     private static final String CSRF_TOKEN_NAME = "X-TOKEN";
 
@@ -102,12 +106,13 @@ public class CSRFValidationFilter implements Filter {
         //Using this way we implement the first providing of token
         Cookie tokenCookie = null;
         if (httpReq.getCookies() != null) {
-            tokenCookie = Arrays.stream(httpReq.getCookies()).filter(c -> c.getName().equals(CSRF_TOKEN_NAME)).findFirst().orElse(null);
+            String csrfCookieExpectedName = this.determineCookieName(httpReq);
+            tokenCookie = Arrays.stream(httpReq.getCookies()).filter(c -> c.getName().equals(csrfCookieExpectedName)).findFirst().orElse(null);
         }
         if (tokenCookie == null || this.isBlank(tokenCookie.getValue())) {
             LOG.info("CSRFValidationFilter: CSRF cookie absent or value is null/empty so we provide one and return an HTTP NO_CONTENT response !");
             //Add the CSRF token cookie and header
-            this.addTokenCookieAndHeader(httpResp);
+            this.addTokenCookieAndHeader(httpReq, httpResp);
             //Set response state to "204 No Content" in order to allow the requester to clearly identify an initial response providing the initial CSRF token
             httpResp.setStatus(HttpServletResponse.SC_NO_CONTENT);
         } else {
@@ -131,7 +136,7 @@ public class CSRFValidationFilter implements Filter {
                 HttpServletResponseWrapper httpRespWrapper = new HttpServletResponseWrapper(httpResp);
                 chain.doFilter(request, httpRespWrapper);
                 //Add the CSRF token cookie and header
-                this.addTokenCookieAndHeader(httpRespWrapper);
+                this.addTokenCookieAndHeader(httpReq, httpRespWrapper);
             }
         }
     }
@@ -182,17 +187,29 @@ public class CSRFValidationFilter implements Filter {
     }
 
     /**
+     * Determine the name of the CSRF cookie for the targeted backend service
+     *
+     * @param httpRequest Source HTTP request
+     * @return The name of the cookie as a string
+     */
+    private String determineCookieName(HttpServletRequest httpRequest) {
+        String backendServiceName = httpRequest.getRequestURI().replaceAll("/", "-");
+        return CSRF_TOKEN_NAME + "-" + backendServiceName;
+    }
+
+    /**
      * Add the CSRF token cookie and header to the provided HTTP response object
      *
+     * @param httpRequest  Source HTTP request
      * @param httpResponse HTTP response object to update
      */
-    private void addTokenCookieAndHeader(HttpServletResponse httpResponse) {
+    private void addTokenCookieAndHeader(HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
         //Get new token
         String token = this.generateToken();
         //Add cookie manually because the current Cookie class implementation do not support the "SameSite" attribute
         //We let the adding of the "Secure" cookie attribute to the reverse proxy rewriting...
         //Here we lock the cookie from JS access and we use the SameSite new attribute protection
-        String cookieSpec = String.format("%s=%s; HttpOnly; SameSite=Strict", CSRF_TOKEN_NAME, token);
+        String cookieSpec = String.format("%s=%s; Path=%s; HttpOnly; SameSite=Strict", this.determineCookieName(httpRequest), token, httpRequest.getRequestURI());
         httpResponse.addHeader("Set-Cookie", cookieSpec);
         //Add cookie header to give access to the token to the JS code
         httpResponse.setHeader(CSRF_TOKEN_NAME, token);

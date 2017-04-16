@@ -22,8 +22,8 @@ public class ServiceServlet extends HttpServlet {
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         JSONObject data = new JSONObject();
         data.put("RequestURI", req.getRequestURI());
-        data.put("QueryString", req.getQueryString());
         data.put("Method", req.getMethod());
+        data.put("QueryString", req.getQueryString());
         resp.setContentType("application/json");
         resp.getWriter().write(data.toJSONString());
     }
