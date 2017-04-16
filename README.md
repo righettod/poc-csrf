@@ -10,7 +10,7 @@ Precisely the following concepts:
     * Double submit cookie (stateless)
     * Leverage *SameSite* cookie attribute
 
-The POC will focus on stateless approach, i.e. no use of Session for CSRF token storage, because the following project, OWASP CSRFGuard, cover thr stateful approach:
+The POC will focus on stateless approach, i.e. no use of Session for CSRF token storage, because the following project, OWASP CSRFGuard, cover the stateful approach:
 
 https://github.com/aramrami/OWASP-CSRFGuard
 
