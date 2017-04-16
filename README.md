@@ -20,7 +20,11 @@ The project is developed with Maven under IntelliJ IDEA.
 
 A web page propose to send manual request in parallel of automated requests sending in order to show all parallel exchanges and CSRF tokens parallel handling.
 
-![Demo](demo.gif)
+![Demo](demo1.png)
+
+![Demo](demo2.png)
+
+![Demo](demo3.png)
 
 # Note about the SameSite cookie attribute
 
