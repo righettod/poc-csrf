@@ -28,8 +28,6 @@ A web page propose to send manual request in parallel of automated requests send
 
 # Note about the SameSite cookie attribute
 
-*Will be added to the CSRF article when POC will be finished*
-
 Source from *https://tools.ietf.org/html/draft-ietf-httpbis-cookie-same-site-00*:
 
 "These attribute are intended to provide a solid layer of defense-in-depth against attacks which require embedding an authenticated request into an attacker-controlled context."
