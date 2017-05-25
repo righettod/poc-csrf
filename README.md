@@ -60,6 +60,10 @@ Run the following command to run the prototype (it will exposed on **http://loca
 mvn tomcat7:run-war
 ```
 
+# TODO
+
+- Auto deploy POC on cloud provider 
+
 # Main references
 
 * Origin HTTP header - https://wiki.mozilla.org/Security/Origin
